@@ -20,6 +20,22 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 const usersCollection = client.db('computerBazar').collection('users');
 
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    // console.log({ authHeader });
+    if (!authHeader) {
+        return res.status(401).send('Unauthorized access');
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 async function run() {
     try {
         await client.connect();
@@ -29,6 +45,37 @@ async function run() {
     }
 }
 run();
+
+// save users to db
+app.post('/user', async (req, res) => {
+    try {
+        console.log(req.body);
+        const user = await usersCollection.insertOne(req.body);
+        console.log(user);
+        res.send({
+            status: true,
+            message: `The user successfully added`
+        })
+    } catch (error) {
+        console.log(error.name, error.message);
+        res.send({
+            status: false,
+            error: error
+        })
+    }
+})
+
+app.get('/jwt', async (req, res) => {
+    const email = req.query.email;
+
+    const user = await usersCollection.findOne({ email: email });
+    if (user) {
+        var token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '10d' });
+        return res.send({ accessToken: token });
+    }
+    // console.log(user);
+    res.status(403).send({ accessToken: '' });
+})
 
 app.get('/', (req, res) => {
     res.send("Computer Bazar Server is Running");
