@@ -20,6 +20,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 const usersCollection = client.db('computerBazar').collection('users');
 const categoriesCollection = client.db('computerBazar').collection('productCategories');
+const productsCollection = client.db('computerBazar').collection('products');
 
 // Verify JWT
 function verifyJWT(req, res, next) {
@@ -107,6 +108,23 @@ app.get('/product-categories', async (req, res) => {
         res.send({
             status: false,
             error: error
+        })
+    }
+})
+
+// get the products using category
+app.get('/category/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const categoryProducts = await productsCollection.filter(product => product.category_id === id);
+        res.send({
+            status: true,
+            categoryProducts
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error
         })
     }
 })
