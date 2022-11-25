@@ -148,6 +148,14 @@ app.post('/booking', async (req, res) => {
     }
 })
 
+// find if admin or not
+app.get('/user/admin/:email', async (req, res) => {
+    const email = req.params.email;
+    const query = { email };
+    const user = await usersCollection.findOne(query);
+    res.send({ isAdmin: user?.role === 'admin' });
+})
+
 app.get('/', (req, res) => {
     res.send("Computer Bazar Server is Running");
 })
