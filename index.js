@@ -21,6 +21,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 const usersCollection = client.db('computerBazar').collection('users');
 const categoriesCollection = client.db('computerBazar').collection('productCategories');
 const productsCollection = client.db('computerBazar').collection('products');
+const bookingsCollection = client.db('computerBazar').collection('bookings');
 
 // Verify JWT
 function verifyJWT(req, res, next) {
@@ -116,7 +117,10 @@ app.get('/product-categories', async (req, res) => {
 app.get('/category/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const categoryProducts = await productsCollection.filter(product => product.category_id === id);
+        console.log(id);
+        const query = { category_id: id }
+        const categoryProducts = await productsCollection.find(query).toArray();
+        console.log(categoryProducts);
         res.send({
             status: true,
             categoryProducts
@@ -124,7 +128,22 @@ app.get('/category/:id', async (req, res) => {
     } catch (error) {
         res.send({
             status: false,
-            error
+            error: error
+        })
+    }
+})
+
+app.post('/booking', async (req, res) => {
+    try {
+        const booking = await bookingsCollection.insertOne(req.body);
+        res.send({
+            status: true,
+            message: `You have successfully booked ${req.body.productName}!`
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
         })
     }
 })
