@@ -113,14 +113,29 @@ app.get('/product-categories', async (req, res) => {
     }
 })
 
+//Insert the product using post method
+app.post('/product', async (req, res) => {
+    try {
+        const product = await productsCollection.insertOne(req.body);
+        res.send({
+            status: true,
+            message: `You have successfully booked ${req.body.title}!`
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+
+})
+
 // get the products using category
 app.get('/category/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        console.log(id);
         const query = { category_id: id }
         const categoryProducts = await productsCollection.find(query).toArray();
-        console.log(categoryProducts);
         res.send({
             status: true,
             categoryProducts
