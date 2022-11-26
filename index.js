@@ -114,12 +114,13 @@ app.get('/product-categories', async (req, res) => {
 })
 
 //Insert the product using post method
-app.post('/product', async (req, res) => {
+app.post('/product', verifyJWT, async (req, res) => {
     try {
         const product = await productsCollection.insertOne(req.body);
+        console.log(product);
         res.send({
             status: true,
-            message: `You have successfully booked ${req.body.title}!`
+            message: `You have successfully added ${req.body.title}!`
         })
     } catch (error) {
         res.send({
@@ -162,6 +163,34 @@ app.post('/booking', async (req, res) => {
         })
     }
 })
+
+//get the booking info from db
+app.get('/bookings', verifyJWT, async (req, res) => {
+    try {
+        // console.log(req.headers.authorization);
+        const email = req.query.email;
+        const decodedEmail = req.decoded.email;
+        // console.log('inside booking', email, decodedEmail);
+        if (email !== decodedEmail) {
+            return res.status(403).send({ message: 'Forbidden access' })
+        }
+
+        //before JWT
+        const bookings = await bookingsCollection.find({ email: req.query.email }).toArray();
+        res.send({
+            status: true,
+            bookings: bookings
+        })
+    } catch (error) {
+        console.log(error.name, error.message);
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+
+})
+
 
 // find if admin or not
 app.get('/user/admin/:email', async (req, res) => {
