@@ -164,17 +164,38 @@ app.post('/booking', async (req, res) => {
     }
 })
 
+//get the advertised products and make sure the product is available
+app.get('/advertised-products', async (req, res) => {
+    try {
+        const query = {
+            $and: [
+                {
+                    isAdvertised: true
+                },
+                {
+                    $or: [
+                        { isSold: false },
+                        { isSold: { $exists: false } }
+                    ]
+                }
+            ]
+        };
+        const adsProducts = await productsCollection.find(query).toArray();
+        res.send({
+            status: true,
+            adsProducts
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+})
+
 //get the products for specific seller
 app.get('/my-products', verifyJWT, async (req, res) => {
     try {
-        const email = req.query.email;
-        const decodedEmail = req.decoded.email;
-        // console.log('inside booking', email, decodedEmail);
-        if (email !== decodedEmail) {
-            return res.status(403).send({ message: 'Forbidden access' })
-        }
-
-        //before JWT
         const products = await productsCollection.find({ sellerEmail: req.query.email }).toArray();
         res.send({
             status: true,
