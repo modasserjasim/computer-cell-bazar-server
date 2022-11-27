@@ -195,7 +195,7 @@ app.patch('/my-product/:id', verifyJWT, async (req, res) => {
     try {
         const id = req.params.id;
         const status = req.body.status;
-        console.log('inside', id, status);
+        // console.log('inside', id, status);
         const query = { _id: ObjectId(id) };
         const updatedDoc = {
             $set: {
@@ -207,7 +207,7 @@ app.patch('/my-product/:id', verifyJWT, async (req, res) => {
 
         res.send({
             status: true,
-            message: `The product is marked as Sold`
+            message: `The product is marked as ${status ? 'Sold' : 'Available'}`
         });
     } catch (error) {
         res.send({
@@ -215,6 +215,42 @@ app.patch('/my-product/:id', verifyJWT, async (req, res) => {
             error: error.message
         })
     }
+})
+//make the product advertised/featured //should be verifySeller
+app.patch('/my-product/ad/:id', verifyJWT, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const status = req.body.status;
+        // console.log('inside ad', id, status);
+        const query = { _id: ObjectId(id) };
+        const updatedDoc = {
+            $set: {
+                isAdvertised: status
+            }
+        }
+        const result = await productsCollection.updateOne(query, updatedDoc);
+
+        res.send({
+            status: true,
+            message: `You have successfully boosted this product!}`
+        });
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+})
+
+// delete the product from my-products route
+app.delete('/my-product/:id', verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const result = await productsCollection.deleteOne(query);
+    res.send({
+        status: true,
+        message: 'The product has been deleted'
+    });
 })
 
 
