@@ -258,7 +258,6 @@ app.get('/all-seller', async (req, res) => {
     try {
         const query = { role: 'seller' };
         const allSellers = await usersCollection.find(query).toArray();
-        console.log(query, allSellers);
         res.send({
             status: true,
             allSellers
@@ -271,6 +270,33 @@ app.get('/all-seller', async (req, res) => {
 
     }
 
+})
+
+//make the seller verified //should be verifyAdmin
+app.patch('/seller/:id', verifyJWT, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const status = req.body.status;
+        console.log('inside', id, status);
+        const query = { _id: ObjectId(id) };
+        const updatedDoc = {
+            $set: {
+                isSellerVerified: status
+            }
+        }
+        const result = await usersCollection.updateOne(query, updatedDoc);
+
+
+        res.send({
+            status: true,
+            message: `You have successfully verified the seller!`
+        });
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
 })
 
 
