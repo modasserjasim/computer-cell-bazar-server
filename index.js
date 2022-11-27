@@ -253,6 +253,26 @@ app.delete('/my-product/:id', verifyJWT, async (req, res) => {
     });
 })
 
+//get all the sellers
+app.get('/all-seller', async (req, res) => {
+    try {
+        const query = { role: 'seller' };
+        const allSellers = await usersCollection.find(query).toArray();
+        console.log(query, allSellers);
+        res.send({
+            status: true,
+            allSellers
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+
+    }
+
+})
+
 
 // find if admin or not
 app.get('/user/admin/:email', async (req, res) => {
