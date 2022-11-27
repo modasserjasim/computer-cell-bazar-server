@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 require('colors');
@@ -114,7 +114,7 @@ app.get('/product-categories', async (req, res) => {
 })
 
 //Insert the product using post method
-app.post('/product', verifyJWT, async (req, res) => {
+app.post('/add-product', verifyJWT, async (req, res) => {
     try {
         const product = await productsCollection.insertOne(req.body);
         console.log(product);
@@ -164,10 +164,9 @@ app.post('/booking', async (req, res) => {
     }
 })
 
-//get the booking info from db
-app.get('/bookings', verifyJWT, async (req, res) => {
+//get the products for specific seller
+app.get('/my-products', verifyJWT, async (req, res) => {
     try {
-        // console.log(req.headers.authorization);
         const email = req.query.email;
         const decodedEmail = req.decoded.email;
         // console.log('inside booking', email, decodedEmail);
@@ -176,10 +175,10 @@ app.get('/bookings', verifyJWT, async (req, res) => {
         }
 
         //before JWT
-        const bookings = await bookingsCollection.find({ email: req.query.email }).toArray();
+        const products = await productsCollection.find({ sellerEmail: req.query.email }).toArray();
         res.send({
             status: true,
-            bookings: bookings
+            products
         })
     } catch (error) {
         console.log(error.name, error.message);
@@ -189,6 +188,33 @@ app.get('/bookings', verifyJWT, async (req, res) => {
         })
     }
 
+})
+
+//update the product sales status from the my products //should be verifySeller
+app.patch('/my-product/:id', verifyJWT, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const status = req.body.status;
+        console.log('inside', id, status);
+        const query = { _id: ObjectId(id) };
+        const updatedDoc = {
+            $set: {
+                isSold: status
+            }
+        }
+        const result = await productsCollection.updateOne(query, updatedDoc);
+        console.log(result);
+
+        res.send({
+            status: true,
+            message: `The product is marked as Sold`
+        });
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
 })
 
 
