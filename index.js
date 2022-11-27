@@ -254,7 +254,7 @@ app.delete('/my-product/:id', verifyJWT, async (req, res) => {
 })
 
 //get all the sellers
-app.get('/all-seller', async (req, res) => {
+app.get('/all-sellers', async (req, res) => {
     try {
         const query = { role: 'seller' };
         const allSellers = await usersCollection.find(query).toArray();
@@ -310,6 +310,35 @@ app.delete('/seller/:id', verifyJWT, async (req, res) => {
     });
 })
 
+//get all the buyers
+app.get('/all-buyers', async (req, res) => {
+    try {
+        const query = { role: 'buyer' };
+        const allBuyers = await usersCollection.find(query).toArray();
+        res.send({
+            status: true,
+            allBuyers
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+
+    }
+
+})
+
+// delete the buyers from all-buyers route //verifyAdmin
+app.delete('/buyer/:id', verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const result = await usersCollection.deleteOne(query);
+    res.send({
+        status: true,
+        message: 'The Buyer has been deleted!'
+    });
+})
 
 // find if admin or not
 app.get('/user/admin/:email', async (req, res) => {
