@@ -299,6 +299,17 @@ app.patch('/seller/:id', verifyJWT, async (req, res) => {
     }
 })
 
+// delete the seller from all-seller route //verifyAdmin
+app.delete('/seller/:id', verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const result = await usersCollection.deleteOne(query);
+    res.send({
+        status: true,
+        message: 'The Seller has been deleted!'
+    });
+})
+
 
 // find if admin or not
 app.get('/user/admin/:email', async (req, res) => {
