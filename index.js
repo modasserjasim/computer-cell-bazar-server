@@ -135,7 +135,20 @@ app.post('/add-product', verifyJWT, async (req, res) => {
 app.get('/category/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const query = { category_id: id }
+        // const query = { category_id: id }
+        const query = {
+            $and: [
+                {
+                    category_id: id
+                },
+                {
+                    $or: [
+                        { isSold: false },
+                        { isSold: { $exists: false } }
+                    ]
+                }
+            ]
+        }
         const categoryProducts = await productsCollection.find(query).toArray();
         res.send({
             status: true,
@@ -306,6 +319,7 @@ app.patch('/seller/:id', verifyJWT, async (req, res) => {
             }
         }
         const result = await usersCollection.updateOne(query, updatedDoc);
+        // const productResult = await productsCollection.updateOne(query, updatedDoc)
 
 
         res.send({
@@ -359,6 +373,48 @@ app.delete('/buyer/:id', verifyJWT, async (req, res) => {
         status: true,
         message: 'The Buyer has been deleted!'
     });
+})
+
+//make the product reported //should be verifyBuyer
+app.patch('/reported-product/:id', verifyJWT, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const status = req.body.status;
+        const query = { _id: ObjectId(id) };
+        const updatedDoc = {
+            $set: {
+                isReported: status
+            }
+        }
+        const result = await productsCollection.updateOne(query, updatedDoc);
+
+        res.send({
+            status: true,
+            message: `You have successfully reported this product. We'll verify the product soon!`
+        });
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+})
+
+//get the reported products
+app.get('/reported-products', verifyJWT, async (req, res) => {
+    try {
+        const reportedProducts = await productsCollection.find({ isReported: true }).toArray();
+        res.send({
+            status: true,
+            reportedProducts
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+
 })
 
 // find if admin or not
