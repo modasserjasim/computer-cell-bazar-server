@@ -56,6 +56,28 @@ const verifyAdmin = async (req, res, next) => {
     next();
 }
 
+// Create verifySeller middleware
+const verifySeller = async (req, res, next) => {
+    const decodedEmail = req.decoded.email;
+    const query = { email: decodedEmail };
+    const user = await usersCollection.findOne(query);
+    if (user?.role !== 'seller') {
+        return res.status(403).send({ message: 'Forbidden access' })
+    }
+    next();
+}
+
+// Create verifyBuyer middleware
+const verifyBuyer = async (req, res, next) => {
+    const decodedEmail = req.decoded.email;
+    const query = { email: decodedEmail };
+    const user = await usersCollection.findOne(query);
+    if (user?.role !== 'buyer') {
+        return res.status(403).send({ message: 'Forbidden access' })
+    }
+    next();
+}
+
 async function run() {
     try {
         await client.connect();
