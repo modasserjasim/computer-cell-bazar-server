@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 require('colors');
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 
 
 const app = express();
@@ -319,7 +320,7 @@ app.patch('/seller/:id', verifyJWT, async (req, res) => {
             }
         }
         const result = await usersCollection.updateOne(query, updatedDoc);
-        // const productResult = await productsCollection.updateOne(query, updatedDoc)
+        const productResult = await productsCollection.updateOne(query, updatedDoc);
 
 
         res.send({
@@ -407,6 +408,23 @@ app.get('/reported-products', verifyJWT, async (req, res) => {
         res.send({
             status: true,
             reportedProducts
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+
+})
+
+// get the orders/booking info for specific buyers
+app.get('/my-orders', verifyJWT, async (req, res) => {
+    try {
+        const myOrders = await bookingsCollection.find({ email: req.query.email }).toArray();
+        res.send({
+            status: true,
+            myOrders
         })
     } catch (error) {
         res.send({
