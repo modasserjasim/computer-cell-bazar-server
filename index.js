@@ -23,6 +23,7 @@ const usersCollection = client.db('computerBazar').collection('users');
 const categoriesCollection = client.db('computerBazar').collection('productCategories');
 const productsCollection = client.db('computerBazar').collection('products');
 const bookingsCollection = client.db('computerBazar').collection('bookings');
+const paymentsCollection = client.db('computerBazar').collection('payments');
 
 // Verify JWT
 function verifyJWT(req, res, next) {
@@ -118,7 +119,6 @@ app.get('/product-categories', async (req, res) => {
 app.post('/add-product', verifyJWT, async (req, res) => {
     try {
         const product = await productsCollection.insertOne(req.body);
-        console.log(product);
         res.send({
             status: true,
             message: `You have successfully added ${req.body.title}!`
@@ -425,6 +425,76 @@ app.get('/my-orders', verifyJWT, async (req, res) => {
         res.send({
             status: true,
             myOrders
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+
+})
+
+//find booking/order to payment
+app.get('/order/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const order = await bookingsCollection.findOne(query);
+        res.send({
+            status: true,
+            order
+        })
+    } catch (error) {
+        res.send({
+            status: false,
+            error: error.message
+        })
+    }
+
+
+})
+
+// payment gateway integration
+app.post("/create-payment-intent", async (req, res) => {
+    const order = req.body;
+    const price = order.price;
+    const amount = price * 100;
+
+    // Create a PaymentIntent with the order amount and currency
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "bdt",
+        payment_method_types: [
+            "card"
+        ]
+    });
+
+    res.send({
+        clientSecret: paymentIntent.client_secret,
+    });
+});
+
+// save payments to db
+app.post('/payment', async (req, res) => {
+    try {
+        const payment = req.body;
+        const result = await paymentsCollection.insertOne(payment);
+
+        const id = payment.bookingId;
+        const filter = { _id: ObjectId(id) };
+        const updatedDoc = {
+            $set: {
+                paid: true,
+                transactionId: payment.transactionId
+            }
+        }
+
+        const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc);
+
+        res.send({
+            status: true,
+            message: "The payment has been completed!"
         })
     } catch (error) {
         res.send({
