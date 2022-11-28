@@ -42,6 +42,20 @@ function verifyJWT(req, res, next) {
     })
 }
 
+// CREATE verifyAdmin middleware
+const verifyAdmin = async (req, res, next) => {
+    console.log('Inside verifyAdmin', req.decoded.email);
+    const decodedEmail = req.decoded.email;
+    console.log(decodedEmail);
+    const query = { email: decodedEmail };
+    const user = await usersCollection.findOne(query);
+    // console.log('user from 261', user);
+    if (user?.role !== 'admin') {
+        return res.status(403).send({ message: 'Forbidden access' })
+    }
+    next();
+}
+
 async function run() {
     try {
         await client.connect();
@@ -63,6 +77,31 @@ app.get('/jwt', async (req, res) => {
     }
     // console.log(user);
     res.status(403).send({ accessToken: '' });
+})
+
+// find if admin or not
+app.get('/user/admin/:email', async (req, res) => {
+    const email = req.params.email;
+    const query = { email };
+    const user = await usersCollection.findOne(query);
+    res.send({ isAdmin: user?.role === 'admin' });
+})
+// find if seller or not
+app.get('/user/seller/:email', async (req, res) => {
+    const email = req.params.email;
+    const query = { email };
+    const user = await usersCollection.findOne(query);
+    res.send({
+        isSeller: user?.role === 'seller',
+        isSellerVerified: user?.isSellerVerified
+    });
+})
+// find if buyer or not
+app.get('/user/buyer/:email', async (req, res) => {
+    const email = req.params.email;
+    const query = { email };
+    const user = await usersCollection.findOne(query);
+    res.send({ isBuyer: user?.role === 'buyer' });
 })
 
 // save users to db
@@ -505,13 +544,6 @@ app.post('/payment', async (req, res) => {
 
 })
 
-// find if admin or not
-app.get('/user/admin/:email', async (req, res) => {
-    const email = req.params.email;
-    const query = { email };
-    const user = await usersCollection.findOne(query);
-    res.send({ isAdmin: user?.role === 'admin' });
-})
 
 app.get('/', (req, res) => {
     res.send("Computer Bazar Server is Running");
