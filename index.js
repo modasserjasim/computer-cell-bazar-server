@@ -240,7 +240,7 @@ app.post('/booking', async (req, res) => {
 })
 
 //get the advertised products and make sure the product is available
-app.get('/advertised-products', async (req, res) => {
+app.get('/advertised-products', verifyJWT, async (req, res) => {
     try {
         const query = {
             $and: [
@@ -269,7 +269,7 @@ app.get('/advertised-products', async (req, res) => {
 })
 
 //get the products for specific seller
-app.get('/my-products', verifyJWT, async (req, res) => {
+app.get('/my-products', verifyJWT, verifySeller, async (req, res) => {
     try {
         const products = await productsCollection.find({ sellerEmail: req.query.email }).toArray();
         res.send({
@@ -480,7 +480,7 @@ app.get('/reported-products', verifyJWT, async (req, res) => {
 })
 
 // get the orders/booking info for specific buyers
-app.get('/my-orders', verifyJWT, async (req, res) => {
+app.get('/my-orders', verifyJWT, verifyBuyer, async (req, res) => {
     try {
         const myOrders = await bookingsCollection.find({ email: req.query.email }).toArray();
         res.send({
